@@ -1,0 +1,4 @@
+# 이 파일을 local.properties 로 복사한 뒤 값을 채웁니다. local.properties 는 저장소에 올라가지 않습니다.
+# 값을 비워 두면 앱은 서버 없이 동작하는 로컬 데모 모드로 실행됩니다.
+carlink.supabaseUrl=
+carlink.supabaseAnonKey=
