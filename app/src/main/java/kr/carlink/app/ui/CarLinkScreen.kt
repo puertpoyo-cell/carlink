@@ -250,7 +250,7 @@ private fun MessageCard(card: IncomingCard, brand: Brand, vm: CarLinkViewModel) 
                 CardState.ACCEPTED, CardState.REPLIED -> {
                     Text(card.sentence.text(brand), color = Palette.Text, fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
                     if (card.verification == Verification.VERIFIED) {
-                        Text("내 차량의 도어 신호와 일치합니다.", color = Palette.Mint, fontSize = 15.sp)
+                        Text("내 차량 신호와 일치합니다.", color = Palette.Mint, fontSize = 15.sp)
                     } else if (card.verification == Verification.REFERENCE) {
                         Text("내 차량 신호로는 열림이 확인되지 않았습니다.", color = Palette.Text3, fontSize = 15.sp)
                     }
@@ -346,8 +346,12 @@ private fun SetupPanel(state: UiState, vm: CarLinkViewModel, modifier: Modifier 
 
             Text("긴급 자동 발신", color = Palette.Text, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
             Text(
-                "급감속 신호를 감지했을 때와 같은 동작을 수동으로 실행합니다. 뒤쪽 차량 전체에 '앞차 급정거'가 '차량 감지' 등급으로 전달됩니다.",
+                "브레이크 페달 신호가 '밟음'으로 바뀌면 뒤쪽 차량 전체에 '앞차 급정거'를 '차량 감지' 등급으로 자동 발신합니다. 프로토타입은 페달 신호만 보며, 실제 서비스는 감속 정도로 판단합니다. 아래 버튼은 같은 동작을 수동으로 실행합니다.",
                 color = Palette.Text3, fontSize = 15.sp
+            )
+            Text(
+                "브레이크 신호 ${if (state.brakeWatching) "구독 중" else "구독 안 됨"} · ${state.brakeSignal}",
+                color = Palette.Text2, fontSize = 16.sp
             )
             Row {
                 Pill(text = "급정거 신호 발생시키기", color = Palette.Red, selected = true) { vm.triggerHardBrake() }

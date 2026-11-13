@@ -44,6 +44,8 @@ data class UiState(
     val doorPosition: Int? = null,
     val cards: List<IncomingCard> = emptyList(),
     val emergency: IncomingCard? = null,
+    val brakeSignal: String = "수신 전",
+    val brakeWatching: Boolean = false,
     val lastSent: String = "",
     val diagnostics: String = ""
 )
@@ -85,7 +87,30 @@ class CarLinkViewModel(app: Application) : AndroidViewModel(app) {
                 doorAreas = vehicle.doorAreaNames()
             )
         }
-        if (ok) watchDoor(_state.value.doorArea)
+        if (ok) {
+            watchDoor(_state.value.doorArea)
+            watchBrake()
+        }
+    }
+
+    private var lastBrakePressed: Boolean? = null
+    private var lastAutoSendAt = 0L
+
+    /** 브레이크 페달이 '밟음'으로 바뀌는 순간 뒤쪽 차량에 긴급 알림을 자동 발신한다. */
+    private fun watchBrake() {
+        val started = vehicle.startBrakeUpdates { raw, pressed ->
+            _state.update { it.copy(brakeSignal = raw) }
+            if (pressed != null) {
+                val rising = pressed && lastBrakePressed == false
+                lastBrakePressed = pressed
+                val now = System.currentTimeMillis()
+                if (rising && now - lastAutoSendAt > AUTO_SEND_COOLDOWN_MS) {
+                    lastAutoSendAt = now
+                    triggerHardBrake()
+                }
+            }
+        }
+        _state.update { it.copy(brakeWatching = started) }
     }
 
     fun selectDoorArea(area: String) {
@@ -225,7 +250,7 @@ class CarLinkViewModel(app: Application) : AndroidViewModel(app) {
 
     fun accept(key: Long) {
         val card = _state.value.cards.firstOrNull { it.key == key } ?: return
-        val needsCheck = card.sentence.verify == VerifySignal.DOOR
+        val needsCheck = card.sentence.verify != VerifySignal.NONE
         updateCard(key) {
             it.copy(
                 state = CardState.ACCEPTED,
@@ -233,18 +258,17 @@ class CarLinkViewModel(app: Application) : AndroidViewModel(app) {
             )
         }
         speak(card.sentence.text(_state.value.profile.brand), urgent = false)
-        if (needsCheck) verifyWithDoor(key)
+        if (needsCheck) verifyWithDoor(key, if (card.sentence.verify == VerifySignal.TRUNK) TRUNK_AREA else _state.value.doorArea)
     }
 
-    private fun verifyWithDoor(key: Long) {
+    private fun verifyWithDoor(key: Long, area: String) {
         if (!vehicle.isReady) {
             updateCard(key) { it.copy(verification = Verification.UNAVAILABLE) }
             return
         }
         vehicle.readDoorPosition(
-            areaName = _state.value.doorArea,
+            areaName = area,
             onResult = { pos ->
-                _state.update { it.copy(doorPosition = pos) }
                 val result = when {
                     pos == null -> Verification.UNAVAILABLE
                     pos > 0 -> Verification.VERIFIED
@@ -293,6 +317,11 @@ class CarLinkViewModel(app: Application) : AndroidViewModel(app) {
         if (!ttsReady) return
         val mode = if (urgent) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD
         tts?.speak(text, mode, null, "carlink-" + System.nanoTime())
+    }
+
+    private companion object {
+        const val TRUNK_AREA = "REAR"
+        const val AUTO_SEND_COOLDOWN_MS = 8000L
     }
 
     override fun onCleared() {

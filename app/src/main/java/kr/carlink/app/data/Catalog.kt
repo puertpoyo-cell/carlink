@@ -22,7 +22,7 @@ enum class SendTarget(val label: String) {
 }
 
 /** 수신 차량이 자기 차량 신호로 확인할 수 있는 항목. */
-enum class VerifySignal { NONE, DOOR }
+enum class VerifySignal { NONE, DOOR, TRUNK }
 
 /**
  * 카탈로그의 한 문장. 앱은 문장 본문이 아니라 [id] 만 주고받는다.
@@ -64,7 +64,7 @@ object Catalog {
         Sentence("S03", Category.SORRY, "놀라게 해서 죄송해요", "불편을 드려 죄송합니다"),
 
         // 차량 상태 안내 (8)
-        Sentence("V01", Category.VEHICLE_STATE, "트렁크가 열려 있어요", "트렁크가 열려 있습니다", VerifySignal.DOOR),
+        Sentence("V01", Category.VEHICLE_STATE, "트렁크가 열려 있어요", "트렁크가 열려 있습니다", VerifySignal.TRUNK),
         Sentence("V02", Category.VEHICLE_STATE, "주유구가 열려 있어요", "주유구가 열려 있습니다"),
         Sentence("V03", Category.VEHICLE_STATE, "충전구가 열려 있어요", "충전구가 열려 있습니다"),
         Sentence("V04", Category.VEHICLE_STATE, "헤드라이트가 꺼져 있어요", "전조등이 꺼져 있습니다"),
