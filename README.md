@@ -55,7 +55,7 @@ adb forward tcp:8088 tcp:8088
 ## 테스트 환경
 
 - Pleos Connect Emulator 2.1.0 (Android 14, API 34, Automotive)
-- Pleos Vehicle SDK 2.3.1
+- Pleos Vehicle SDK 2.3.2
 - Android Studio, JDK 17, Gradle 8.10.2, Kotlin 2.0.0
 - minSdk 28, targetSdk 35
 
